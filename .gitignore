@@ -1,0 +1,10 @@
+# Directorios de PlatformIO
+.pio/
+
+# Configuraciones locales del editor
+.vscode/
+
+# Binarios y temporales
+*.o
+*.elf
+*.bin

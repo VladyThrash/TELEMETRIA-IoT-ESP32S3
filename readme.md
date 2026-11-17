@@ -2,7 +2,7 @@
 
 Este repositorio contiene el firmware en C (basado en ESP-IDF y FreeRTOS) para un sistema de adquisición de datos biomecánicos en tiempo real. El sistema utiliza una placa ESP32-S3 para leer simultáneamente dos sensores inerciales MPU6050 (ubicados en la rodilla y el pie) a través de dos buses I2C físicos independientes, procesando los ángulos de inclinación y publicándolos hacia un broker MQTT.
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El proyecto está diseñado bajo una arquitectura de microservicios IoT y procesamiento asíncrono (Dual-Core) para garantizar un determinismo estricto en el muestreo de los sensores, aislando la latencia de red.
 
@@ -11,7 +11,7 @@ El proyecto está diseñado bajo una arquitectura de microservicios IoT y proces
 3. **Capa de Mensajería:** Eclipse Mosquitto (Broker MQTT local).
 4. **Capa de Persistencia y Visualización (Stack TIG):** Telegraf + InfluxDB v2 + Grafana (Desplegados vía Docker).
 
-## 🚀 Características del Firmware
+## Características del Firmware
 
 * **I2C Dual-Bus:** Utiliza la nueva API `driver/i2c_master.h` de ESP-IDF para instanciar dos controladores I2C por hardware (`I2C_NUM_0` e `I2C_NUM_1`), evitando colisiones de direcciones (ambos MPU6050 operan en `0x68`).
 * **Multiprocesamiento (FreeRTOS):**
@@ -28,7 +28,7 @@ Se deben conectar los pines `AD0` de **ambos** sensores a `GND`. La alimentació
 | **Sensor Rodilla** | `I2C_NUM_0` | GPIO 8 | GPIO 9 | `0x68` |
 | **Sensor Pie** | `I2C_NUM_1` | GPIO 17 | GPIO 18 | `0x68` |
 
-## 📦 Estructura de Datos (Payload MQTT)
+## Estructura de Datos (Payload MQTT)
 
 Los datos se publican en el topic `telemetria/pierna` con una frecuencia de 50Hz (cada 20ms) bajo la siguiente estructura JSON:
 
@@ -41,7 +41,7 @@ Los datos se publican en el topic `telemetria/pierna` con una frecuencia de 50Hz
 }
 ```
 
-## 🛠️ Requisitos y Dependencias
+## Requisitos y Dependencias
 
 - **Entorno:** PlatformIO o ESP-IDF v5.2+
 - **Framework:** ESP-IDF
@@ -50,7 +50,7 @@ Los datos se publican en el topic `telemetria/pierna` con una frecuencia de 50Hz
 > **Nota para PlatformIO:** Asegúrate de que tu archivo `src/CMakeLists.txt` incluya el registro de componentes de la siguiente manera:
 > `idf_component_register(SRCS "main.c" INCLUDE_DIRS "." REQUIRES mqtt json)`
 
-## ⚙️ Configuración y Compilación
+## Configuración y Compilación
 
 1. **Clona este repositorio:**
    ```bash

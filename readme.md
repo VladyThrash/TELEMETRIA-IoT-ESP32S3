@@ -54,7 +54,7 @@ Los datos se publican en el topic `telemetria/pierna` con una frecuencia de 50Hz
 
 1. **Clona este repositorio:**
    ```bash
-   git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git
+   git clone https://github.com/VladyThrash/TELEMETRIA-IoT-ESP32S3.git
    cd TU_REPOSITORIO
    ```
 

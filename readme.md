@@ -19,7 +19,7 @@ El proyecto está diseñado bajo una arquitectura de microservicios IoT y proces
   * **Core 0 (Conectividad):** Tarea que maneja el stack TCP/IP, arma la estructura JSON (`cJSON`) y publica los datos vía `esp_mqtt_client`.
 * **Comunicación Segura (IPC):** Transferencia atómica de datos entre núcleos mediante `QueueHandle_t`.
 
-## 🔌 Esquema de Conexiones (Pinout)
+## Esquema de Conexiones (Pinout)
 
 Se deben conectar los pines `AD0` de **ambos** sensores a `GND`. La alimentación debe provenir del pin de `3.3V` de la ESP32-S3.
 

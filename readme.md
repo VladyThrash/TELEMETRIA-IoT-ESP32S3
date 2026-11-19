@@ -88,3 +88,70 @@ Los datos se publican en el topic `telemetria/pie` con una frecuencia de **50 Hz
    pio run -t upload -t monitor
    ```
    > **Nota:** Mantén el sensor en posición neutra durante el primer segundo tras el encendido mientras finaliza la calibración automática.
+
+## Despliegue de Backend, Visualización y Capa Web (`env/`)
+
+Además del firmware en la ESP32-S3, el directorio `env/` contiene la infraestructura de mensajería, almacenamiento, análisis biomecánico con Machine Learning e interfaz clínica desplegada mediante **Docker Compose**.
+
+### Estructura del Directorio `env/`
+
+```text
+env/
+├── db/
+│   └── init.sql           # Esquema inicial de PostgreSQL (usuarios, sesiones y métricas)
+├── docker-compose.yml     # Orquestación del stack TIG, PostgreSQL y aplicación web
+├── telegraf.conf          # Suscripción MQTT e ingesta hacia InfluxDB v2
+└── webapp/
+    ├── Dockerfile         # Imagen Python 3.11 para la interfaz Streamlit
+    ├── requirements.txt   # Dependencias (Streamlit, Paho-MQTT, Scikit-Learn, Psycopg2)
+    ├── app.py             # Interfaz web: login, terapia en vivo, evaluación e historial
+    ├── mqtt_worker.py     # Hilo MQTT asíncrono con captura bajo demanda (IDLE / RECORDING)
+    ├── features.py        # Extractor de 11 métricas biomecánicas en sesiones libres
+    ├── ml_model.py        # Pipeline de regresión Ridge (calidad 0–100) y reentrenamiento
+    ├── db.py              # Persistencia en PostgreSQL y autenticación con bcrypt
+    └── models/            # Volumen persistente para artefactos entrenados (.joblib)
+```
+
+### Resumen de Servicios y Módulos
+
+* **Broker MQTT (Servicio en el Host):** **Eclipse Mosquitto** (`mosquitto.service`) escuchando en el puerto `1883` (`0.0.0.0:1883`). Recibe continuamente las tramas a `50 Hz` desde la ESP32-S3 en `telemetria/pie` y las distribuye hacia los consumidores.
+* **Stack TIG (Telemetría Técnica en Tiempo Real):**
+  * **`influxdb` (`influxdb_bio`):** Base de datos de series temporales (InfluxDB v2.7, bucket `biomecanica`) que almacena los registros crudos de alta frecuencia.
+  * **`telegraf` (`telegraf_bio`):** Agente de recolección suscrito a `telemetria/pie` que transforma los mensajes JSON y los inserta en InfluxDB.
+  * **`grafana` (`grafana_bio`):** Paneles de monitoreo técnico y depuración de señales en tiempo real.
+* **Capa Clínica y Machine Learning:**
+  * **`postgres` (`postgres_bio`):** Base de datos relacional (PostgreSQL 16, BD `terapia_pie`) que almacena cuentas de usuario, historial de sesiones, calificaciones clínicas y métricas agregadas (`JSONB`).
+  * **`webapp` (`webapp_bio`):** Aplicación en **Streamlit** que mantiene la placa como emisor *stateless* ("dummie"): en reposo muestra una vista previa en vivo sin escribir en disco, y al iniciar una terapia captura la sesión, calcula 11 indicadores cinemáticos (ROM por dirección, balance articular, velocidad angular, estabilidad en *Yaw*, cadencia y fatiga) e infiere una puntuación de calidad (`0–100`) mediante regresión **Ridge**.
+
+### Cómo Levantar y Detener los Servicios
+
+1. **Verifica que el broker Mosquitto esté activo en el equipo anfitrión:**
+   ```bash
+   sudo systemctl status mosquitto
+   # Si está inactivo:
+   sudo systemctl start mosquitto
+   ```
+
+2. **Entra a la carpeta `env/` y construye/levanta los contenedores por primera vez:**
+   ```bash
+   cd env
+   sudo docker compose up -d --build
+   ```
+
+3. **Control diario (iniciar y detener el entorno):**
+   ```bash
+   # Detener todos los contenedores conservando volúmenes y modelos entrenados
+   sudo docker compose stop
+
+   # Volver a iniciar los servicios
+   sudo docker compose start
+   ```
+
+### Accesos Locales (`localhost`)
+
+| Servicio | URL / Dirección Local | Uso Principal |
+| :--- | :--- | :--- |
+| **Aplicación Web (Streamlit)** | `http://localhost:8501` | Inicio de sesión, monitoreo en vivo, evaluación ML e historial. |
+| **Grafana** | `http://localhost:3000` | Dashboards técnicos de series temporales. |
+| **InfluxDB v2** | `http://localhost:8086` | Consulta de métricas crudas a 50 Hz (`org: uv`, `bucket: biomecanica`). |
+| **PostgreSQL** | `localhost:5433` | Acceso externo a la BD relacional `terapia_pie` (`5432` interno). |

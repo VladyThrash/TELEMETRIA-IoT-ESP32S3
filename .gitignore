@@ -8,3 +8,8 @@
 *.o
 *.elf
 *.bin
+
+# Compilados Python y binarios de modelos ML.
+__pycache__/
+*.py[cod]
+webapp/models/*.joblib
